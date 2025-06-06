@@ -7,7 +7,7 @@ import java.util.StringTokenizer;
 import scr.Controller.Stage;
 
 /**
- * @author Daniele Loiacono
+ * @author gruppo06
  *
  */
 public class Client {
