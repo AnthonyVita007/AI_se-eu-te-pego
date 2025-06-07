@@ -31,15 +31,24 @@ public class CsvLogManager {
 
     // Ottiene il vettore delle features all'indice specificato
     public double[] getFeatureVectorAtIndex(int index) {
-        // TODO: implementazione
-        return null;
+        if (featureVectors == null) {
+            throw new IllegalStateException("Feature vectors not initialized. Call extractVectors() first.");
+        }
+        if (index < 0 || index >= featureVectors.size()) {
+            throw new IndexOutOfBoundsException("Invalid index for feature vector: " + index);
+        }
+        return featureVectors.get(index);
     }
 
     // Ottiene il vettore delle azioni all'indice specificato
     public double[] getActionVectorAtIndex(int index) {
-        // TODO: implementazione
-        return null;
-    }
+        if (actionVectors == null) {
+            throw new IllegalStateException("Feature vectors not initialized. Call extractVectors() first.");
+        }
+        if (index < 0 || index >= actionVectorsVectors.size()) {
+            throw new IndexOutOfBoundsException("Invalid index for feature vector: " + index);
+        }
+        return actionVectors.get(index);
 
     // Restituisce tutte le feature vectors
     public List<double[]> getAllFeatureVectors() {
