@@ -7,20 +7,27 @@ public class CsvLogManager {
     private String csvFilePath; // Path al file CSV
     private List<double[]> featureVectors; // Lista di vettori delle features (input KNN)
     private List<double[]> actionVectors; // Lista di vettori delle azioni (output KNN)
+    private CsvLogParser parser;
 
     //COSTRUTTORE
     public CsvLogManager(String csvFilePath) {
         this.csvFilePath = csvFilePath;
+        this.parser = new CsvLogParser(csvFilePath)
     }
 
     //METODI
-    // Metodo per caricare il CSV in memoria
-    public void loadCsv() {
-        // TODO: implementazione
-    }
-
     //Metodo per estrarre da ogni riga del file il relativo features vector e action vector
-    //il metodo sfrutterà gli strumenti messi a disposzione dalla classe CsvLogParser
+    public void extractVectors() {
+        double[] extractedFeatureVector = new double[23];
+        double[] extractedActionVector = new double[4];
+
+        parser.openFile();
+        while(parser.nextSample(extractedFeatureVector, extractedActionVector)) {
+            this.featureVectors.add(extractedFeatureVector);
+            this.actionVectors.add(extractedActionVector);
+        }
+        parser.closeFile();
+    }
 
     // Ottiene il vettore delle features all'indice specificato
     public double[] getFeatureVectorAtIndex(int index) {
