@@ -1,9 +1,5 @@
 package scr;
 
-/**
- * Created by IntelliJ IDEA. User: Administrator Date: Mar 4, 2008 Time: 3:44:29
- * PM
- */
 public class MessageBasedSensorModel implements SensorModel {
 
     private MessageParser message;
