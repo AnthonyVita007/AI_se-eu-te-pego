@@ -12,7 +12,7 @@ public class CsvLogManager {
     //COSTRUTTORE
     public CsvLogManager(String csvFilePath) {
         this.csvFilePath = csvFilePath;
-        this.parser = new CsvLogParser(csvFilePath)
+        this.parser = new CsvLogParser(csvFilePath);
     }
 
     //METODI
