@@ -45,10 +45,11 @@ public class CsvLogManager {
         if (actionVectors == null) {
             throw new IllegalStateException("Feature vectors not initialized. Call extractVectors() first.");
         }
-        if (index < 0 || index >= actionVectorsVectors.size()) {
+        if (index < 0 || index >= actionVectors.size()) {
             throw new IndexOutOfBoundsException("Invalid index for feature vector: " + index);
         }
         return actionVectors.get(index);
+    }
 
     // Restituisce tutte le feature vectors
     public List<double[]> getAllFeatureVectors() {
