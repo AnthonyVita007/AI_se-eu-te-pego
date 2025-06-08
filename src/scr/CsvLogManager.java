@@ -1,5 +1,6 @@
 package scr;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CsvLogManager {
@@ -13,6 +14,8 @@ public class CsvLogManager {
     public CsvLogManager(String csvFilePath) {
         this.csvFilePath = csvFilePath;
         this.parser = new CsvLogParser(csvFilePath);
+        this.featureVectors = new ArrayList<>();
+        this.actionVectors = new ArrayList<>();
     }
 
     //METODI
