@@ -52,7 +52,7 @@ public class CsvLogParser {
 
                 String[] tokens = line.split(",");
                 if (tokens.length < LINE_SIZE) {
-                    throw new IOException("Riga non valida: attesi almeno " + LINE_SIZE + "valori, trovati " + tokens.length);
+                    throw new IOException("Riga non valida: attesi almeno " + LINE_SIZE + " valori, trovati " + tokens.length);
                 }
 
                 // Pulisce i vettori ricevuti

@@ -37,7 +37,6 @@ public class CsvLogManager {
         parser.closeFile();
     }
 
-
     // Ottiene il vettore delle features all'indice specificato
     public ArrayList<Double> getFeatureVectorAtIndex(int index) {
         if (featureVectors == null) {
@@ -60,12 +59,13 @@ public class CsvLogManager {
         return actionVectors.get(index);
     }
 
-    // Restituisce tutte le feature vectors
+    //GETTER
+    // Restituisce tutti i feature vectors
     public ArrayList<ArrayList<Double>> getFeatureVectors() {
         return featureVectors;
     }
 
-    // Restituisce tutte le action vectors
+    // Restituisce tutti gli action vectors
     public ArrayList<ArrayList<Double>> getActionVectors() {
         return actionVectors;
     }
