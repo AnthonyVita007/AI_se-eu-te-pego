@@ -61,12 +61,12 @@ public class CsvLogManager {
     }
 
     // Restituisce tutte le feature vectors
-    public ArrayList<ArrayList<Double>> getAllFeatureVectors() {
+    public ArrayList<ArrayList<Double>> getFeatureVectors() {
         return featureVectors;
     }
 
     // Restituisce tutte le action vectors
-    public ArrayList<ArrayList<Double>> getAllActionVectors() {
+    public ArrayList<ArrayList<Double>> getActionVectors() {
         return actionVectors;
     }
 }

@@ -11,12 +11,13 @@ public class CsvLogParser {
     private BufferedReader reader; // Reader per leggere il file una riga alla volta
 
     // Dimensioni dei vettori (basate sulle feature/azioni scelte)
-    private static final int FEATURE_VECTOR_SIZE = 100; // speed, angleToTrackAxis, lateralSpeed, rpm, gear_sensor,
+    private static int FEATURE_VECTOR_SIZE = 9; // speed, angleToTrackAxis, lateralSpeed, rpm, gear_sensor,
                                                         //trackPosition, currentLapTime, damage, distanceFromStartLine, 
                                                         //distanceRaced, fuelLevel, lastLapTime, z, zSpeed, trackEdge_[0-18],
                                                         //focus_[0-4], wheelSpinVel_[0-3]
-    private static final int ACTION_VECTOR_SIZE = 100;   // action_accelerate, action_brake, action_clutch, action_gear,
+    private static int ACTION_VECTOR_SIZE = 7;   // action_accelerate, action_brake, action_clutch, action_gear,
                                                         //action_steering, action_restartRace, action_focus
+    private static int LINE_SIZE = FEATURE_VECTOR_SIZE + ACTION_VECTOR_SIZE; // numero di parametri separati da virgola presenti su ogni riga del file csv
 
     //COSTRUTTORE
     public CsvLogParser(String csvFilePath) {
@@ -50,21 +51,21 @@ public class CsvLogParser {
                 }
 
                 String[] tokens = line.split(",");
-                if (tokens.length < 49) {
-                    throw new IOException("Riga non valida: attesi almeno 49 valori, trovati " + tokens.length);
+                if (tokens.length < LINE_SIZE) {
+                    throw new IOException("Riga non valida: attesi almeno " + LINE_SIZE + "valori, trovati " + tokens.length);
                 }
 
                 // Pulisce i vettori ricevuti
                 features.clear();
                 actions.clear();
 
-                // Carica le features (primi 42 valori)
-                for (int i = 0; i < 42; i++) {
+                // Carica le features (primi FEATURE_VECTOR_SIZE valori)
+                for (int i = 0; i < FEATURE_VECTOR_SIZE; i++) {
                     features.add(Double.parseDouble(tokens[i].trim()));
                 }
 
-                // Carica le actions (ultimi 7 valori)
-                for (int i = 42; i < 49; i++) {
+                // Carica le actions (ultimi ACTION_VECTOR_SIZE valori)
+                for (int i = FEATURE_VECTOR_SIZE; i < LINE_SIZE; i++) {
                     actions.add(Double.parseDouble(tokens[i].trim()));
                 }
 
@@ -86,5 +87,22 @@ public class CsvLogParser {
             e.printStackTrace();
         }
         reader = null;
+    }
+
+    //GETTER
+    public String getCsvFilePath() {
+        return csvFilePath;
+    }
+
+    public static int getFeatureVectorSize() {
+        return FEATURE_VECTOR_SIZE;
+    }
+
+    public static int getActionVectorSize() {
+        return ACTION_VECTOR_SIZE;
+    }
+
+    public static int getLineSize() {
+        return LINE_SIZE;
     }
 }
