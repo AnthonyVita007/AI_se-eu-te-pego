@@ -19,9 +19,7 @@ public class Client {
 
         KnnController AI_Controller = new KnnController();
         AI_Controller.createFeaturesDataset(manager_file.getFeatureVectors());
-        AI_Controller.createActionsDataset(manager_file.getActionVectors());
+        AI_Controller.normalizeFeaturesDataset();
         AI_Controller.printFeaturesDataset();
-        AI_Controller.printActionsDataset();
-
     }
 }

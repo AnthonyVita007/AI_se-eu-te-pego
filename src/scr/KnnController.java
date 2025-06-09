@@ -1,5 +1,4 @@
 package scr;
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class KnnController extends Controller{
@@ -8,7 +7,7 @@ public class KnnController extends Controller{
     private double[][] actionsDataset;
 
     //COSTRUTTORE
-    public KnnController() {
+    public KnnController(){
         super();
     }
 
@@ -51,8 +50,27 @@ public class KnnController extends Controller{
         }
     }
 
-    public void normalizeDataset(){
+    public void normalizeFeaturesDataset() {
+        // Dichiarazione degli array contenenti i valori minimi e massimi per ogni feature
+        double[] array_valori_min = {1.34, 1.89, 4.94, 2.58, 1.87, 2.56, 1.63, 3.33, 2.24}; // array contenente i valori minimi per ogni feature
+        double[] array_valori_max = {99.50, 99.41, 98.93, 99.12, 98.58, 99.15, 93.50, 99.87, 98.40};  // array contenente i valori massimi per ogni feature
 
+        // Normalizzazione di ogni feature utilizzando la formula: x_norm = (x-x_min)/(x_max - x_min)
+        for (int i = 0; i < featuresDataset.length; i++) {           // per ogni vettore di feature
+            for (int j = 0; j < featuresDataset[i].length; j++) {    // per ogni feature nel vettore
+                double x = featuresDataset[i][j];
+                double x_min = array_valori_min[j];
+                double x_max = array_valori_max[j];
+
+                // Applicazione della formula di normalizzazione
+                // Controllo per evitare divisione per zero
+                if (x_max != x_min) {
+                    featuresDataset[i][j] = (x - x_min) / (x_max - x_min);
+                } else {
+                    featuresDataset[i][j] = 0; // caso in cui max = min, impostiamo il valore a 0
+                }
+            }
+        }
     }
 
     //METODI PER LA STAMPA DEI DATASET
