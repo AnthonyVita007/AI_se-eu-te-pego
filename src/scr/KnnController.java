@@ -1,16 +1,23 @@
 package scr;
 import java.util.*;
 
+import static java.lang.Math.*;
+
 public class KnnController extends Controller{
     //ATTRIBUTI
     private double[][] featuresDataset;
     private double[][] actionsDataset;
+    // Attributi per la normalizzazione
+    private static final double[] array_valori_min = {1.34, 1.89, 4.94, 2.58, 1.87, 2.56, 1.63, 3.33, 2.24};
+    private static final double[] array_valori_max = {99.50, 99.41, 98.93, 99.12, 98.58, 99.15, 93.50, 99.87, 98.40};
 
+    //---------------------------------------------------------------------------------------------------------
     //COSTRUTTORE
     public KnnController(){
         super();
     }
 
+    //---------------------------------------------------------------------------------------------------------
     //METODI CREAZIONE E NORMALIZZAZIONE DATASET
     public void createFeaturesDataset(ArrayList<ArrayList<Double>> featureVectors){
         // Inizializza la matrice con le dimensioni appropriate:
@@ -50,29 +57,28 @@ public class KnnController extends Controller{
         }
     }
 
-    public void normalizeFeaturesDataset() {
-        // Dichiarazione degli array contenenti i valori minimi e massimi per ogni feature
-        double[] array_valori_min = {1.34, 1.89, 4.94, 2.58, 1.87, 2.56, 1.63, 3.33, 2.24}; // array contenente i valori minimi per ogni feature
-        double[] array_valori_max = {99.50, 99.41, 98.93, 99.12, 98.58, 99.15, 93.50, 99.87, 98.40};  // array contenente i valori massimi per ogni feature
-
-        // Normalizzazione di ogni feature utilizzando la formula: x_norm = (x-x_min)/(x_max - x_min)
-        for (int i = 0; i < featuresDataset.length; i++) {           // per ogni vettore di feature
-            for (int j = 0; j < featuresDataset[i].length; j++) {    // per ogni feature nel vettore
-                double x = featuresDataset[i][j];
-                double x_min = array_valori_min[j];
-                double x_max = array_valori_max[j];
-
-                // Applicazione della formula di normalizzazione
-                // Controllo per evitare divisione per zero
-                if (x_max != x_min) {
-                    featuresDataset[i][j] = (x - x_min) / (x_max - x_min);
-                } else {
-                    featuresDataset[i][j] = 0; // caso in cui max = min, impostiamo il valore a 0
-                }
+    public double[] normalizeVector(double[] v) {
+        double[] normalized = new double[v.length];
+        for (int i = 0; i < v.length; i++) {
+            double x = v[i];
+            double x_min = array_valori_min[i];
+            double x_max = array_valori_max[i];
+            if (x_max != x_min) {
+                normalized[i] = (x - x_min) / (x_max - x_min);
+            } else {
+                normalized[i] = 0;
             }
+        }
+        return normalized;
+    }
+
+    public void normalizeFeaturesDataset() {
+        for (int i = 0; i < featuresDataset.length; i++) {
+            featuresDataset[i] = normalizeVector(featuresDataset[i]);
         }
     }
 
+    //---------------------------------------------------------------------------------------------------------
     //METODI PER LA STAMPA DEI DATASET
     public void printFeaturesDataset() {
         System.out.println("\n=== FEATURES DATASET ===");
@@ -86,13 +92,7 @@ public class KnnController extends Controller{
         System.out.println("\n");
 
         // Stampa la matrice riga per riga
-        for (int i = 0; i < featuresDataset.length; i++) {
-            System.out.printf("row%-3d ", i); // Indice della riga
-            for (int j = 0; j < featuresDataset[i].length; j++) {
-                System.out.printf("%.2f  ", featuresDataset[i][j]);
-            }
-            System.out.println(); // Nuova riga
-        }
+        Utilities.printMatrice(featuresDataset);
     }
 
     public void printActionsDataset() {
@@ -107,16 +107,34 @@ public class KnnController extends Controller{
         System.out.println("\n");
 
         // Stampa la matrice riga per riga
-        for (int i = 0; i < actionsDataset.length; i++) {
-            System.out.printf("row%-3d ", i); // Indice della riga
-            for (int j = 0; j < actionsDataset[i].length; j++) {
-                System.out.printf("%.2f  ", actionsDataset[i][j]);
-            }
-            System.out.println(); // Nuova riga
-        }
+        Utilities.printMatrice(actionsDataset);
     }
 
+    //---------------------------------------------------------------------------------------------------------
+    //METODI CALCOLO DISTANZA EUCLIDEA TRA VETTORI E NEAREST-NEIGHBOR
+    public double calculateEuclideanDistance_v1v2(double[] v1, double[] v2) {
+        double sum = 0;
+        for (int i = 0; i < v1.length; i++) {
+            double diff = v1[i] - v2[i];
+            sum += diff * diff;
+        }
+        return sqrt(sum);
+    }
 
+    public int findNearestNeighborIndex(double[] torcsFeatureVector) {
+        int nearestIndex = -1;
+        double minDistance = Double.MAX_VALUE;
+        for (int i = 0; i < featuresDataset.length; i++) {
+            double distance = calculateEuclideanDistance_v1v2(torcsFeatureVector, featuresDataset[i]);
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearestIndex = i;
+            }
+        }
+        return nearestIndex;
+    }
+
+    //---------------------------------------------------------------------------------------------------------
     //METODI EREDITATI DA "Controller" DI CUI SI DEVE FARE OVERRIDE
     @Override
     public Action control(SensorModel sensors) {
@@ -132,5 +150,15 @@ public class KnnController extends Controller{
     @Override
     public void shutdown() {
         // Da implementare
+    }
+
+    //---------------------------------------------------------------------------------------------------------
+    //GETTER
+    public double[][] getFeaturesDataset() {
+        return featuresDataset;
+    }
+
+    public double[][] getActionsDataset() {
+        return actionsDataset;
     }
 }
