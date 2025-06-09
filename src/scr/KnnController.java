@@ -12,7 +12,7 @@ public class KnnController extends Controller{
         super();
     }
 
-    //METODI CREAZIONE DATASET
+    //METODI CREAZIONE E NORMALIZZAZIONE DATASET
     public void createFeaturesDataset(ArrayList<ArrayList<Double>> featureVectors){
         // Inizializza la matrice con le dimensioni appropriate:
         // - numero di righe = numero di feature vectors
@@ -51,11 +51,14 @@ public class KnnController extends Controller{
         }
     }
 
-    //METODI PER LA STAMPA DEI DATASET
+    public void normalizeDataset(){
 
+    }
+
+    //METODI PER LA STAMPA DEI DATASET
     public void printFeaturesDataset() {
         System.out.println("\n=== FEATURES DATASET ===");
-        System.out.println("Dimensioni: " + featuresDataset.length + " righe × " + featuresDataset[0].length + " colonne\n");
+        System.out.println("Dimensioni: " + featuresDataset.length + " vettori_di_features × " + featuresDataset[0].length + " num_features\n");
 
         // Stampa gli indici delle colonne
         System.out.print("       "); // Spazio per l'indice della riga
@@ -76,7 +79,7 @@ public class KnnController extends Controller{
 
     public void printActionsDataset() {
         System.out.println("\n=== ACTIONS DATASET ===");
-        System.out.println("Dimensioni: " + actionsDataset.length + " righe × " + actionsDataset[0].length + " colonne\n");
+        System.out.println("Dimensioni: " + actionsDataset.length + " vettori_di_actions × " + actionsDataset[0].length + " num_actions\n");
 
         // Stampa gli indici delle colonne
         System.out.print("       "); // Spazio per l'indice della riga
@@ -94,6 +97,7 @@ public class KnnController extends Controller{
             System.out.println(); // Nuova riga
         }
     }
+
 
     //METODI EREDITATI DA "Controller" DI CUI SI DEVE FARE OVERRIDE
     @Override
