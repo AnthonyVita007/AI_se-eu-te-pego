@@ -1,15 +1,8 @@
-/**
- *
- */
 package scr;
 
 import java.util.StringTokenizer;
 import scr.Controller.Stage;
 
-/**
- * @author gruppo06
- *
- */
 public class Client {
 
     private static int UDP_TIMEOUT = 10000;
@@ -22,94 +15,66 @@ public class Client {
     private static Stage stage;
     private static String trackName;
 
-    /**
-     * @param args is used to define all the options of the client. <port:N> is used
-     *             to specify the port for the connection (default is 3001)
-     *             <host:ADDRESS> is used to specify the address of the host where
-     *             the server is running (default is localhost) <id:ClientID> is
-     *             used to specify the ID of the client sent to the server (default
-     *             is championship2009) <verbose:on> is used to set verbose mode on
-     *             (default is off) <maxEpisodes:N> is used to set the number of
-     *             episodes (default is 1) <maxSteps:N> is used to set the max
-     *             number of steps for each episode (0 is default value, that means
-     *             unlimited number of steps) <stage:N> is used to set the current
-     *             stage: 0 is WARMUP, 1 is QUALIFYING, 2 is RACE, others value
-     *             means UNKNOWN (default is UNKNOWN) <trackName:name> is used to
-     *             set the name of current track
-     */
     public static void main(String[] args) {
+        // 1. Parsing dei parametri da terminale e dei dati di connessione
         parseParameters(args);
-        SocketHandler mySocket = new SocketHandler(host, port, verbose);
-        String inMsg;
 
-        Controller driver = load(args[0]);
+        // 2. Istanziazione del Controller AI
+        KnnController driver = new KnnController();
         driver.setStage(stage);
         driver.setTrackName(trackName);
 
-        /* Build init string */
-        float[] angles = driver.initAngles();
-        String initStr = clientId + "(init";
-        for (int i = 0; i < angles.length; i++) {
-            initStr = initStr + " " + angles[i];
-        }
-        initStr = initStr + ")";
+        // 3. Preparazione socket di comunicazione
+        SocketHandler mySocket = new SocketHandler(host, port, verbose);
 
+        // 4. Caricamento e normalizzazione dataset
+        prepareDatasets(driver);
+
+        // 5. Gestione del ciclo di episodi di gara
+        runEpisodes(driver, mySocket);
+
+        // 6. Shutdown finale
+        driver.shutdown();
+        mySocket.close();
+        System.out.println("Client shutdown.");
+        System.out.println("Bye, bye!");
+    }
+
+    private static void prepareDatasets(KnnController driver) {
+        String CsvFilePath = "dataset_definitivo.csv";
+        CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
+        manager_file.extractVectors();
+        driver.createFeaturesDataset(manager_file.getFeatureVectors());
+        driver.normalizeFeaturesDataset();
+        driver.createActionsDataset(manager_file.getActionVectors());
+    }
+
+    private static void runEpisodes(KnnController driver, SocketHandler mySocket) {
+        String inMsg;
         long curEpisode = 0;
         boolean shutdownOccurred = false;
+
+        String initStr = buildInitString(driver);
+
         do {
+            identifyWithServer(mySocket, initStr);
 
-            /*
-             * Client identification
-             */
-
-            do {
-                mySocket.send(initStr);
-                inMsg = mySocket.receive(UDP_TIMEOUT);
-            } while (inMsg == null || inMsg.indexOf("***identified***") < 0);
-
-            /*
-             * Start to drive
-             */
             long currStep = 0;
             while (true) {
-                /*
-                 * Receives from TORCS the feature vector
-                 */
                 inMsg = mySocket.receive(UDP_TIMEOUT);
 
                 if (inMsg != null) {
-
-                    /*
-                     * Check if race is ended (shutdown)
-                     */
-                    if (inMsg.indexOf("***shutdown***") >= 0) {
+                    if (inMsg.contains("***shutdown***")) {
                         shutdownOccurred = true;
                         System.out.println("Server shutdown!");
                         break;
                     }
-
-                    /*
-                     * Check if race is restarted
-                     */
-                    if (inMsg.indexOf("***restart***") >= 0) {
+                    if (inMsg.contains("***restart***")) {
                         driver.reset();
                         if (verbose)
                             System.out.println("Server restarting!");
                         break;
                     }
-
-                    /*
-                    * Extract and normalize dataset
-                    */
-
-                    String CsvFilePath = "dataset_definitivo.csv";
-
-                    CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
-                    manager_file.extractVectors();
-
-                    driver.createFeaturesDataset(manager_file.getFeatureVectors());
-                    driver.normalizeFeaturesDataset();
-                    driver.createActionsDataset(manager_file.getActionVectors());
 
                     Action action = new Action();
                     if (currStep < maxSteps || maxSteps == 0)
@@ -119,26 +84,32 @@ public class Client {
 
                     currStep++;
                     mySocket.send(action.toString());
-                } else
+                } else {
                     System.out.println("Server did not respond within the timeout");
+                }
             }
-
         } while (++curEpisode < maxEpisodes && !shutdownOccurred);
+    }
 
-        /*
-         * Shutdown the controller
-         */
-        driver.shutdown();
-        mySocket.close();
-        System.out.println("Client shutdown.");
-        System.out.println("Bye, bye!");
+    private static String buildInitString(Controller driver) {
+        float[] angles = driver.initAngles();
+        StringBuilder initStr = new StringBuilder(clientId + "(init");
+        for (float angle : angles) {
+            initStr.append(" ").append(angle);
+        }
+        initStr.append(")");
+        return initStr.toString();
+    }
 
+    private static void identifyWithServer(SocketHandler mySocket, String initStr) {
+        String inMsg;
+        do {
+            mySocket.send(initStr);
+            inMsg = mySocket.receive(UDP_TIMEOUT);
+        } while (inMsg == null || !inMsg.contains("***identified***"));
     }
 
     private static void parseParameters(String[] args) {
-        /*
-         * Set default values for the options
-         */
         port = 3001;
         host = "localhost";
         clientId = "SCR";
@@ -152,65 +123,47 @@ public class Client {
             StringTokenizer st = new StringTokenizer(args[i], ":");
             String entity = st.nextToken();
             String value = st.nextToken();
-            if (entity.equals("port")) {
-                port = Integer.parseInt(value);
-            }
-            if (entity.equals("host")) {
-                host = value;
-            }
-            if (entity.equals("id")) {
-                clientId = value;
-            }
-            if (entity.equals("verbose")) {
-                if (value.equals("on"))
-                    verbose = true;
-                else if (value.equals(false))
-                    verbose = false;
-                else {
-                    System.out.println(entity + ":" + value + " is not a valid option");
-                    System.exit(0);
-                }
-            }
-            if (entity.equals("id")) {
-                clientId = value;
-            }
-            if (entity.equals("stage")) {
-                stage = Stage.fromInt(Integer.parseInt(value));
-            }
-            if (entity.equals("trackName")) {
-                trackName = value;
-            }
-            if (entity.equals("maxEpisodes")) {
-                maxEpisodes = Integer.parseInt(value);
-                if (maxEpisodes <= 0) {
-                    System.out.println(entity + ":" + value + " is not a valid option");
-                    System.exit(0);
-                }
-            }
-            if (entity.equals("maxSteps")) {
-                maxSteps = Integer.parseInt(value);
-                if (maxSteps < 0) {
-                    System.out.println(entity + ":" + value + " is not a valid option");
-                    System.exit(0);
-                }
+            switch (entity) {
+                case "port":
+                    port = Integer.parseInt(value);
+                    break;
+                case "host":
+                    host = value;
+                    break;
+                case "id":
+                    clientId = value;
+                    break;
+                case "verbose":
+                    if (value.equals("on"))
+                        verbose = true;
+                    else if (value.equals("off"))
+                        verbose = false;
+                    else {
+                        System.out.println(entity + ":" + value + " is not a valid option");
+                        System.exit(0);
+                    }
+                    break;
+                case "stage":
+                    stage = Stage.fromInt(Integer.parseInt(value));
+                    break;
+                case "trackName":
+                    trackName = value;
+                    break;
+                case "maxEpisodes":
+                    maxEpisodes = Integer.parseInt(value);
+                    if (maxEpisodes <= 0) {
+                        System.out.println(entity + ":" + value + " is not a valid option");
+                        System.exit(0);
+                    }
+                    break;
+                case "maxSteps":
+                    maxSteps = Integer.parseInt(value);
+                    if (maxSteps < 0) {
+                        System.out.println(entity + ":" + value + " is not a valid option");
+                        System.exit(0);
+                    }
+                    break;
             }
         }
-    }
-
-    private static Controller load(String name) {
-        Controller controller = null;
-        try {
-            controller = (Controller) (Object) Class.forName(name).newInstance();
-        } catch (ClassNotFoundException e) {
-            System.out.println(name + " is not a class name");
-            System.exit(0);
-        } catch (InstantiationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return controller;
     }
 }
