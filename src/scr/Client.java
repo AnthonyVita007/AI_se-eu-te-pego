@@ -45,8 +45,11 @@ public class Client {
         CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
         manager_file.extractVectors();
         driver.createFeaturesDataset(manager_file.getFeatureVectors());
+        //driver.printFeaturesDataset();
         driver.normalizeFeaturesDataset();
+        //driver.printFeaturesDataset();
         driver.createActionsDataset(manager_file.getActionVectors());
+        //driver.printActionsDataset();
     }
 
     private static void runEpisodes(KnnController driver, SocketHandler mySocket) {
