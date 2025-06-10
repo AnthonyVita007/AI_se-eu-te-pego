@@ -11,12 +11,10 @@ public class CsvLogParser {
     private BufferedReader reader; // Reader per leggere il file una riga alla volta
 
     // Dimensioni dei vettori (basate sulle feature/azioni scelte)
-    private static int FEATURE_VECTOR_SIZE = 9; // speed, angleToTrackAxis, lateralSpeed, rpm, gear_sensor,
-                                                        //trackPosition, currentLapTime, damage, distanceFromStartLine, 
-                                                        //distanceRaced, fuelLevel, lastLapTime, z, zSpeed, trackEdge_[0-18],
-                                                        //focus_[0-4], wheelSpinVel_[0-3]
-    private static int ACTION_VECTOR_SIZE = 7;   // action_accelerate, action_brake, action_clutch, action_gear,
-                                                        //action_steering, action_restartRace, action_focus
+    private static int FEATURE_VECTOR_SIZE = 9; // speed, angleToTrackAxis, lateralSpeed, trackPosition
+                                                        // trackEdge_[3-6-9-12-15], angleToTrackAxis
+    private static int ACTION_VECTOR_SIZE = 6;   // action_accelerate, action_brake, action_clutch, action_gear,
+                                                        //action_steering, action_focus
     private static int LINE_SIZE = FEATURE_VECTOR_SIZE + ACTION_VECTOR_SIZE; // numero di parametri separati da virgola presenti su ogni riga del file csv
 
     //COSTRUTTORE

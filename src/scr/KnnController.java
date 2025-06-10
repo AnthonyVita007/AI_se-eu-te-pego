@@ -120,7 +120,7 @@ public class KnnController extends Controller{
         }
         return sqrt(sum);
     }
-
+    /* 
     public int findNearestNeighborIndex(double[] torcsFeatureVector) {
         int nearestIndex = -1;
         double minDistance = Double.MAX_VALUE;
@@ -132,6 +132,40 @@ public class KnnController extends Controller{
             }
         }
         return nearestIndex;
+    }*/
+
+    public int[] findKNearestNeighborIndices(double[] torcsFeatureVector, int k) {
+        // Lista per accumulare distanza e indice
+        List<double[]> distanceIndexList = new ArrayList<>();
+        for (int i = 0; i < featuresDataset.length; i++) {
+            double distance = calculateEuclideanDistance_v1v2(torcsFeatureVector, featuresDataset[i]);
+            distanceIndexList.add(new double[]{distance, i});
+        }
+        // Ordina per distanza crescente
+        distanceIndexList.sort(Comparator.comparingDouble(a -> a[0]));
+
+        // Estrai i primi k indici
+        int[] nearestIndices = new int[Math.min(k, distanceIndexList.size())];
+        for (int i = 0; i < nearestIndices.length; i++) {
+            nearestIndices[i] = (int)distanceIndexList.get(i)[1];
+        }
+        return nearestIndices;
+    }
+
+    // Esempio di funzione per media delle actions dei vicini
+    public double[] meanActionOfKNeighbors(int[] neighborIndices) {
+        if (actionsDataset == null || neighborIndices.length == 0) return null;
+        int actionLen = actionsDataset[0].length;
+        double[] mean = new double[actionLen];
+        for (int idx : neighborIndices) {
+            for (int j = 0; j < actionLen; j++) {
+                mean[j] += actionsDataset[idx][j];
+            }
+        }
+        for (int j = 0; j < actionLen; j++) {
+            mean[j] /= neighborIndices.length;
+        }
+        return mean;
     }
 
     //---------------------------------------------------------------------------------------------------------

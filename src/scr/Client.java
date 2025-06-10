@@ -12,25 +12,31 @@ import scr.Controller.Stage;
  */
 public class Client {
     public static void main(String[] args) {
-        String CsvFilePath = "C://Users//vitaa//Desktop//testSampling.csv";
+        String CsvFilePath = "D://Codici e scripts//Progetto AI//TEST.csv";
 
         CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
-        manager_file.extractVectors(); //estrae i vettori dal file salvandoli nelle arrayList apposite che ha come attributi
+        manager_file.extractVectors();
 
         KnnController AI_Controller = new KnnController();
         AI_Controller.createFeaturesDataset(manager_file.getFeatureVectors());
+        //AI_Controller.createActionsDataset(manager_file.getActionVectors());
         AI_Controller.normalizeFeaturesDataset();
         AI_Controller.printFeaturesDataset();
 
-        double[] torcsFeatureVector = {72.29,27.69,88.51,13.02,19.67,98.21,65.23,50.6,23.58};
         double[] normalizedTorcsFeatureVector = {0.60, 0.50, 0.40, 0.60, 0.60, 0.60, 0.60, 0.60, 0.60};
-        int nearestNeighbourIndex = AI_Controller.findNearestNeighborIndex(normalizedTorcsFeatureVector);
 
-        System.out.println("\n Normalized Torcs Vector");
-        Utilities.printVettore(normalizedTorcsFeatureVector);
+        
+        int[] kNearestIndices = AI_Controller.findKNearestNeighborIndices(normalizedTorcsFeatureVector, 3);
 
-        System.out.println("\n Nearest Neighbor");
-        System.out.println("index: " + nearestNeighbourIndex);
-        Utilities.printVettore((AI_Controller.getFeaturesDataset())[nearestNeighbourIndex]);
+        System.out.println("\nIndici dei 3 vicini più prossimi:");
+        for (int idx : kNearestIndices) {
+            System.out.println("index: " + idx);
+            Utilities.printVettore((AI_Controller.getFeaturesDataset())[idx]);
+        }
+
+        
+        double[] meanAction = AI_Controller.meanActionOfKNeighbors(kNearestIndices);
+        System.out.println("\nMedia delle azioni dei 3 vicini:");
+        Utilities.printVettore(meanAction);
     }
 }
