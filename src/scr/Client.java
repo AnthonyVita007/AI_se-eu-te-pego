@@ -12,14 +12,14 @@ import scr.Controller.Stage;
  */
 public class Client {
     public static void main(String[] args) {
-        String CsvFilePath = "D://Codici e scripts//Progetto AI//TEST.csv";
+        String CsvFilePath = "C://Users//vitaa//IdeaProjects//AI_se-eu-te-pego//src//dataset_definitivo.csv";
 
         CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
         manager_file.extractVectors();
 
         KnnController AI_Controller = new KnnController();
         AI_Controller.createFeaturesDataset(manager_file.getFeatureVectors());
-        //AI_Controller.createActionsDataset(manager_file.getActionVectors());
+        AI_Controller.createActionsDataset(manager_file.getActionVectors());
         AI_Controller.normalizeFeaturesDataset();
         AI_Controller.printFeaturesDataset();
 

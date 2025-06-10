@@ -8,8 +8,8 @@ public class KnnController extends Controller{
     private double[][] featuresDataset;
     private double[][] actionsDataset;
     // Attributi per la normalizzazione
-    private static final double[] array_valori_min = {1.34, 1.89, 4.94, 2.58, 1.87, 2.56, 1.63, 3.33, 2.24};
-    private static final double[] array_valori_max = {99.50, 99.41, 98.93, 99.12, 98.58, 99.15, 93.50, 99.87, 98.40};
+    private static final double[] array_valori_min = {0.0,-32.5307,-0.719544,-1.0,-1.0,-1.0,-1.0,-1.0,-0.338155};
+    private static final double[] array_valori_max = {282.467,31.5179,1.1072,-1.0,200.0,200.0,200.0,200.0,0.350809};
 
     //---------------------------------------------------------------------------------------------------------
     //COSTRUTTORE
@@ -57,7 +57,7 @@ public class KnnController extends Controller{
         }
     }
 
-    public double[] normalizeVector(double[] v) {
+    public double[] normalizeFeatureVector(double[] v) {
         double[] normalized = new double[v.length];
         for (int i = 0; i < v.length; i++) {
             double x = v[i];
@@ -74,7 +74,7 @@ public class KnnController extends Controller{
 
     public void normalizeFeaturesDataset() {
         for (int i = 0; i < featuresDataset.length; i++) {
-            featuresDataset[i] = normalizeVector(featuresDataset[i]);
+            featuresDataset[i] = normalizeFeatureVector(featuresDataset[i]);
         }
     }
 
@@ -120,7 +120,7 @@ public class KnnController extends Controller{
         }
         return sqrt(sum);
     }
-    /* 
+
     public int findNearestNeighborIndex(double[] torcsFeatureVector) {
         int nearestIndex = -1;
         double minDistance = Double.MAX_VALUE;
@@ -132,7 +132,7 @@ public class KnnController extends Controller{
             }
         }
         return nearestIndex;
-    }*/
+    }
 
     public int[] findKNearestNeighborIndices(double[] torcsFeatureVector, int k) {
         // Lista per accumulare distanza e indice
