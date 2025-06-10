@@ -145,14 +145,13 @@ public class KnnController extends Controller{
         distanceIndexList.sort(Comparator.comparingDouble(a -> a[0]));
 
         // Estrai i primi k indici
-        int[] nearestIndices = new int[Math.min(k, distanceIndexList.size())];
+        int[] nearestIndices = new int[min(k, distanceIndexList.size())];
         for (int i = 0; i < nearestIndices.length; i++) {
             nearestIndices[i] = (int)distanceIndexList.get(i)[1];
         }
         return nearestIndices;
     }
 
-    // Esempio di funzione per media delle actions dei vicini
     public double[] meanActionOfKNeighbors(int[] neighborIndices) {
         if (actionsDataset == null || neighborIndices.length == 0) return null;
         int actionLen = actionsDataset[0].length;
@@ -172,18 +171,53 @@ public class KnnController extends Controller{
     //METODI EREDITATI DA "Controller" DI CUI SI DEVE FARE OVERRIDE
     @Override
     public Action control(SensorModel sensors) {
-        // Da implementare
-        return null;
+        //COSTRUZIONE DEL VETTORE DELLE FEATURE PROVENIENTE DA TORCS
+        double[] torcsFeatureVector = new double[9];
+
+        torcsFeatureVector[0] = sensors.getSpeed();
+        torcsFeatureVector[1] = sensors.getLateralSpeed();
+        torcsFeatureVector[2] = sensors.getTrackPosition();
+
+        double[] track = sensors.getTrackEdgeSensors();
+        torcsFeatureVector[3] = track[2];
+        torcsFeatureVector[4] = track[5];
+        torcsFeatureVector[5] = track[8];
+        torcsFeatureVector[6] = track[11];
+        torcsFeatureVector[7] = track[14];
+
+        torcsFeatureVector[8] = sensors.getAngleToTrackAxis();
+
+        //COSTRUZIONE DELL'ACTION CHE VERRA' INVIATA A TORCS
+        //normalizzazione del vettore delle feature proveniente da TORCS
+        this.normalizeFeatureVector(torcsFeatureVector);
+
+        //troviamo gli indici dei K Nearest Neighbors nel dataset delle features
+        int[] nearestNeighborsIndeces = this.findKNearestNeighborIndices(torcsFeatureVector, 3);
+
+        //troviamo le actions corrispondenti ai 3 Neighbors compiute dal pilota esperto
+        //e ne facciamo la media
+        double[] controlli = this.meanActionOfKNeighbors(nearestNeighborsIndeces);
+
+        //creiamo un oggetto action da ritornare a TORCS
+        Action action = new Action();
+        action.accelerate = controlli[0];
+        action.brake = controlli[1];
+        action.clutch = controlli[2];
+        action.gear = (int) Math.round(controlli[3]);
+        action.steering = controlli[4];
+        action.focus = (int) controlli[5];
+
+        return action;
     }
 
     @Override
     public void reset() {
-        // Da implementare
+        System.out.println("La gara sta per ricominciare");
     }
 
     @Override
     public void shutdown() {
-        // Da implementare
+        System.out.println("Spegnimento");
     }
 
     //---------------------------------------------------------------------------------------------------------

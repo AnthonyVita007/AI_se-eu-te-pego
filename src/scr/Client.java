@@ -73,7 +73,7 @@ public class Client {
             long currStep = 0;
             while (true) {
                 /*
-                 * Receives from TORCS the game state
+                 * Receives from TORCS the feature vector
                  */
                 inMsg = mySocket.receive(UDP_TIMEOUT);
 
