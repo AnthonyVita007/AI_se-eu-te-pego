@@ -155,16 +155,42 @@ public class KnnController extends Controller{
     public double[] meanActionOfKNeighbors(int[] neighborIndices) {
         if (actionsDataset == null || neighborIndices.length == 0) return null;
         int actionLen = actionsDataset[0].length;
-        double[] mean = new double[actionLen];
+        double[] result = new double[actionLen];
+
+        // Per la moda della gear
+        Map<Integer, Integer> gearCounts = new HashMap<>();
+
+        // Calcola somma per le altre azioni, conta le gear per la moda
         for (int idx : neighborIndices) {
             for (int j = 0; j < actionLen; j++) {
-                mean[j] += actionsDataset[idx][j];
+                if (j == 3) { // gear
+                    int gear = (int) Math.round(actionsDataset[idx][j]);
+                    gearCounts.put(gear, gearCounts.getOrDefault(gear, 0) + 1);
+                } else {
+                    result[j] += actionsDataset[idx][j];
+                }
             }
         }
+
+        // Fai la media per le azioni tranne gear
         for (int j = 0; j < actionLen; j++) {
-            mean[j] /= neighborIndices.length;
+            if (j != 3) {
+                result[j] /= neighborIndices.length;
+            }
         }
-        return mean;
+
+        // Trova la moda per la gear
+        int modaGear = 0;
+        int maxCount = 0;
+        for (Map.Entry<Integer, Integer> entry : gearCounts.entrySet()) {
+            if (entry.getValue() > maxCount) {
+                maxCount = entry.getValue();
+                modaGear = entry.getKey();
+            }
+        }
+        result[3] = modaGear;
+
+        return result;
     }
 
     //---------------------------------------------------------------------------------------------------------
