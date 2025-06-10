@@ -9,7 +9,7 @@ public class KnnController extends Controller{
     private double[][] actionsDataset;
     // Attributi per la normalizzazione
     private static final double[] array_valori_min = {0.0,-32.5307,-0.719544,-1.0,-1.0,-1.0,-1.0,-1.0,-0.338155};
-    private static final double[] array_valori_max = {282.467,31.5179,1.1072,-1.0,200.0,200.0,200.0,200.0,0.350809};
+    private static final double[] array_valori_max = {282.467,31.5179,1.1072,200.0,200.0,200.0,200.0,200.0,0.350809};
 
     //---------------------------------------------------------------------------------------------------------
     //COSTRUTTORE
