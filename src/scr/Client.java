@@ -98,6 +98,19 @@ public class Client {
                         break;
                     }
 
+                    /*
+                    * Extract and normalize dataset
+                    */
+
+                    String CsvFilePath = "dataset_definitivo.csv";
+
+                    CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
+                    manager_file.extractVectors();
+
+                    driver.createFeaturesDataset(manager_file.getFeatureVectors());
+                    driver.normalizeFeaturesDataset();
+                    driver.createActionsDataset(manager_file.getActionVectors());
+
                     Action action = new Action();
                     if (currStep < maxSteps || maxSteps == 0)
                         action = driver.control(new MessageBasedSensorModel(inMsg));
