@@ -16,40 +16,46 @@ public class Client {
     private static String trackName;
 
     public static void main(String[] args) {
-        // 1. Parsing dei parametri da terminale e dei dati di connessione
+        // Parsing dei parametri da terminale e dei dati di connessione
         parseParameters(args);
 
-        // 2. Istanziazione del Controller AI
-        KnnController driver = new KnnController(3);
+        // Caricamento e normalizzazione dataset
+        prepareDatasets();
+
+        // Istanziazione del Controller AI
+        KnnController driver = new KnnController(10);
         driver.setStage(stage);
         driver.setTrackName(trackName);
 
-        // 3. Preparazione socket di comunicazione
+        // Preparazione socket di comunicazione
         SocketHandler mySocket = new SocketHandler(host, port, verbose);
 
-        // 4. Caricamento e normalizzazione dataset
-        prepareDatasets(driver);
-
-        // 5. Gestione del ciclo di episodi di gara
+        // Gestione del ciclo di episodi di gara
         runEpisodes(driver, mySocket);
 
-        // 6. Shutdown finale
+        // Shutdown finale
         driver.shutdown();
         mySocket.close();
         System.out.println("Client shutdown.");
         System.out.println("Bye, bye!");
     }
 
-    private static void prepareDatasets(KnnController driver) {
-        String CsvFilePath = "dataset_definitivo.csv";
+    private static void prepareDatasets() {
+        //estrazione dei Features vectors e degli Action vectors dal file
+        String CsvFilePath = "dataset_S_1_2_3_somma.csv";
         CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
         manager_file.extractVectors();
-        driver.createFeaturesDataset(manager_file.getFeatureVectors());
-        //driver.printFeaturesDataset();
-        driver.normalizeFeaturesDataset();
-        //driver.printFeaturesDataset();
-        driver.createActionsDataset(manager_file.getActionVectors());
-        //driver.printActionsDataset();
+
+        //creazione del dataset delle features e sua successiva normalizzazione
+        DatasetsManager.createFeaturesDataset(manager_file.getFeatureVectors());
+        double[] array_valori_max = DatasetsManager.getFeatureMaxValues();
+        double[] array_valori_min = DatasetsManager.getFeatureMinValues();
+        DatasetsManager.defineMaxMinForNormalization(array_valori_max, array_valori_min);
+        DatasetsManager.normalizeFeaturesDataset();
+
+        //creazione del dataset delle actions
+        DatasetsManager.createActionsDataset(manager_file.getActionVectors());
+        DatasetsManager.printActionsDataset();
     }
 
     private static void runEpisodes(KnnController driver, SocketHandler mySocket) {
@@ -80,8 +86,10 @@ public class Client {
                     }
 
                     Action action = new Action();
-                    if (currStep < maxSteps || maxSteps == 0)
+                    if (currStep < maxSteps || maxSteps == 0){
                         action = driver.control(new MessageBasedSensorModel(inMsg));
+                        System.out.println(action.toString());
+                    }
                     else
                         action.restartRace = true;
 
