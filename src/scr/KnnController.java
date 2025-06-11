@@ -11,6 +11,11 @@ public class KnnController extends Controller{
     // Attributo per il numero di vicini (k)
     private int k; // valore di default
 
+    // Parametri per smoothing e limitazione della sterzata
+    private double steeringSmoothingAlpha = 0.3; // Più vicino a 1 = più reattivo, più vicino a 0 = più dolce
+    private double previousSteering = 0.0; // Memorizza la sterzata precedente
+    private double maxSteeringDelta = 0.003; // Variazione massima consentita per step (prova valori 0.03-0.1)
+
     // Classe interna per rappresentare un vicino con indice e distanza
     private static class NeighborInfo {
         int index;
@@ -37,7 +42,7 @@ public class KnnController extends Controller{
             double diff = v1[i] - v2[i];
             sum += diff * diff;
         }
-        return sqrt(sum);
+        return Math.sqrt(sum);
     }
 
     // Restituisce una lista dei K vicini più prossimi, ciascuno con indice e distanza
@@ -52,13 +57,31 @@ public class KnnController extends Controller{
     }
 
     // Calcola la media pesata delle azioni dei vicini (con pesi inversamente proporzionali alla distanza)
-    private double[] weightedMeanActionOfKNeighbors(List<NeighborInfo> neighbors) {
+    /**
+     * Calcola la media pesata delle azioni dei k vicini, applicando una correzione sulla sterzata
+     * in base all'angolo rispetto all'asse della strada.
+     * @param neighbors Lista dei k vicini con distanza e indice
+     * @param angleToTrackAxis Angolo rispetto all'asse della strada (non normalizzato, tipicamente in radianti)
+     * @return vettore delle azioni mediate e corrette
+     */
+    private double[] weightedMeanActionOfKNeighbors(List<NeighborInfo> neighbors, double angleToTrackAxis) {
         if (actionsDataset == null || neighbors.isEmpty()) return null;
         int actionLen = actionsDataset[0].length;
         double[] weightedSum = new double[actionLen];
         double weightSum = 0.0;
         double epsilon = 1e-8; // per evitare divisione per zero
 
+        // Se esiste un vicino con distanza quasi zero, restituisci direttamente la sua azione (evita outlier)
+        for (NeighborInfo neighbor : neighbors) {
+            if (neighbor.distance < 1e-6) {
+                double[] action = actionsDataset[neighbor.index].clone();
+                // Correggi la sterzata se necessario
+                action[4] *= computeSteeringCorrectionFactor(angleToTrackAxis);
+                return action;
+            }
+        }
+
+        // Calcola la media pesata tra i vicini
         for (NeighborInfo neighbor : neighbors) {
             double weight = 1.0 / (neighbor.distance + epsilon);
             weightSum += weight;
@@ -69,7 +92,24 @@ public class KnnController extends Controller{
         for (int j = 0; j < actionLen; j++) {
             weightedSum[j] /= weightSum;
         }
+        // Applica la correzione solo alla sterzata (indice 4)
+        weightedSum[4] *= computeSteeringCorrectionFactor(angleToTrackAxis);
+
         return weightedSum;
+    }
+
+    /**
+     * Calcola un fattore di correzione per la sterzata in base all'angolo rispetto all'asse della pista.
+     * Più l'auto è allineata (angolo vicino a 0), più la sterzata viene smorzata.
+     * Puoi tarare MIN_CORRECTION e la funzione secondo le tue esigenze.
+     */
+    private double computeSteeringCorrectionFactor(double angleToTrackAxis) {
+        final double MIN_CORRECTION = 0.1; // non azzera mai completamente la sterzata
+        // Normalizza l'angolo in [0,1] rispetto ad un massimo atteso (es: 0.35 rad ~ 20°)
+        double maxAngle = 0.35; // adatta questo valore se necessario
+        double normalized = Math.min(1.0, Math.abs(angleToTrackAxis) / maxAngle);
+        // Fattore: se angolo 0 -> MIN_CORRECTION, se angolo max -> 1
+        return MIN_CORRECTION + (1.0 - MIN_CORRECTION) * normalized;
     }
 
     //---------------------------------------------------------------------------------------------------------
@@ -83,7 +123,6 @@ public class KnnController extends Controller{
         torcsFeatureVector[2] = sensors.getTrackPosition();
 
         double[] track = sensors.getTrackEdgeSensors();
-        Utilities.printVettore(track);
         torcsFeatureVector[3] = track[3];
         torcsFeatureVector[4] = track[6];
         torcsFeatureVector[5] = track[9];
@@ -93,14 +132,14 @@ public class KnnController extends Controller{
         torcsFeatureVector[8] = sensors.getAngleToTrackAxis();
 
         // NORMALIZZAZIONE DEL VETTORE DELLE FEATURE PROVENIENTE DA TORCS
-        //torcsFeatureVector = DatasetsManager.normalizeFeatureVector(torcsFeatureVector);
+        torcsFeatureVector = DatasetsManager.normalizeFeatureVector(torcsFeatureVector);
         Utilities.printVettore(torcsFeatureVector);
 
         // TROVIAMO I K NEAREST NEIGHBORS (usando l'attributo di classe k)
         List<NeighborInfo> neighbors = this.findKNearestNeighborsWithDistances(torcsFeatureVector, this.k);
 
         // CALCOLA LA MEDIA PESATA DELLE AZIONI DEI VICINI
-        double[] controlli = this.weightedMeanActionOfKNeighbors(neighbors);
+        double[] controlli = this.weightedMeanActionOfKNeighbors(neighbors, sensors.getAngleToTrackAxis());
 
         // CREA UN OGGETTO ACTION DA RITORNARE A TORCS
         Action action = new Action();
@@ -108,15 +147,40 @@ public class KnnController extends Controller{
         action.brake = controlli[1];
         action.clutch = controlli[2];
         action.gear = (int) Math.round(controlli[3]);
-        action.steering = controlli[4];
-        action.focus = (int) controlli[5];
 
+        //gestione sterzata
+        // --- Smoothing e limitazione della sterzata ---
+        double rawSteering = controlli[4];
+
+        System.out.println("Previous steering: " + previousSteering);
+        System.out.println("Raw steering: " + rawSteering);
+
+
+        // Applica smoothing esponenziale
+        double smoothedSteering = steeringSmoothingAlpha * rawSteering + (1 - steeringSmoothingAlpha) * previousSteering;
+        // Limita la variazione massima per step
+        double delta = smoothedSteering - previousSteering;
+        if (Math.abs(delta) > maxSteeringDelta) {
+            if (delta > 0)
+                smoothedSteering = previousSteering + maxSteeringDelta;
+            else
+                smoothedSteering = previousSteering - maxSteeringDelta;
+        }
+        action.steering = smoothedSteering;
+
+        System.out.println("Smoothed steering: " + smoothedSteering);
+        // Aggiorna la memoria della sterzata
+        previousSteering = smoothedSteering;
+
+        action.focus = (int) controlli[5];
+        action.limitValues();
         return action;
     }
 
     @Override
     public void reset() {
         System.out.println("La gara sta per ricominciare");
+        previousSteering = 0.0; // Importante! Così non hai "memorie" sbagliate tra una gara e l'altra
     }
 
     @Override
@@ -126,14 +190,6 @@ public class KnnController extends Controller{
 
     //---------------------------------------------------------------------------------------------------------
     // GETTER e SETTER
-    public double[][] getFeaturesDataset() {
-        return featuresDataset;
-    }
-
-    public double[][] getActionsDataset() {
-        return actionsDataset;
-    }
-
     public int getK() {
         return k;
     }
