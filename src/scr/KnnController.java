@@ -11,10 +11,13 @@ public class KnnController extends Controller{
     // Attributo per il numero di vicini (k)
     private int k; // valore di default
 
-    // Parametri per smoothing e limitazione della sterzata
+    // Parametri per gestione azioni
     private double steeringSmoothingAlpha = 0.3; // Più vicino a 1 = più reattivo, più vicino a 0 = più dolce
     private double previousSteering = 0.0; // Memorizza la sterzata precedente
-    private double maxSteeringDelta = 0.055; // Variazione massima consentita per step (prova valori 0.03-0.1)
+    private double maxSteeringDelta = 0.05; // Variazione massima consentita per step (prova valori 0.03-0.1)
+
+    final int[] gearUp = {7500, 8000, 8500, 8900, 9400, 0};
+    final int[] gearDown = {0, 2500, 3000, 3500, 4000, 4500};
 
     // Classe interna per rappresentare un vicino con indice e distanza
     private static class NeighborInfo {
@@ -104,12 +107,34 @@ public class KnnController extends Controller{
      * Puoi tarare MIN_CORRECTION e la funzione secondo le tue esigenze.
      */
     private double computeSteeringCorrectionFactor(double angleToTrackAxis) {
-        final double MIN_CORRECTION = 0.15; // non azzera mai completamente la sterzata
+        final double MIN_CORRECTION = 0.1; // non azzera mai completamente la sterzata
         // diminuendo il max angle è più sensibile
         double maxAngle = 0.18;
         double normalized = Math.min(1.0, Math.abs(angleToTrackAxis) / maxAngle);
         // Fattore: se angolo 0 -> MIN_CORRECTION, se angolo max -> 1
         return MIN_CORRECTION + (1.0 - MIN_CORRECTION) * normalized;
+    }
+
+    public int getGear(SensorModel sensors) {
+        int gear = sensors.getGear();
+        double rpm = sensors.getRPM();
+
+        // if gear is 0 (N) or -1 (R) just return 1
+        if (gear < 1) {
+            return 1;
+        }
+        // check if the RPM value of car is greater than the one suggested
+        // to shift up the gear from the current one
+        if (gear < 6 && rpm >= gearUp[gear - 1]) {
+            return gear + 1;
+        } else // check if the RPM value of car is lower than the one suggested
+            // to shift down the gear from the current one
+            if (gear > 1 && rpm <= gearDown[gear - 1]) {
+                return gear - 1;
+            } else // otherwhise keep current gear
+            {
+                return gear;
+            }
     }
 
     //---------------------------------------------------------------------------------------------------------
@@ -144,8 +169,9 @@ public class KnnController extends Controller{
         action.accelerate = controlli[0];
         action.brake = controlli[1];
         action.clutch = controlli[2];
-        action.gear = toIntExact(round(controlli[3]));
-        //gestione sterzata
+        //action.gear = toIntExact(round(controlli[3]));
+        action.gear = getGear(sensors);
+        //GESTIONE STERZATA
         // --- Smoothing e limitazione della sterzata ---
         double rawSteering = controlli[4];
 

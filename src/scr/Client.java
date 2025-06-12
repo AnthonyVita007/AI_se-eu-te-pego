@@ -23,7 +23,7 @@ public class Client {
         prepareDatasets();
 
         // Istanziazione del Controller AI
-        KnnController driver = new KnnController(14);
+        KnnController driver = new KnnController(12);
         driver.setStage(stage);
         driver.setTrackName(trackName);
 
