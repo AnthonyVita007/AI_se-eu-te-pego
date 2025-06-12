@@ -22,7 +22,7 @@ public class TorcsSCRManualDriver implements KeyListener {
     private boolean rightPressed = false;
     private boolean brakePressed = false;
     
-    // File CSV semplificato (8 valori)
+    // File CSV con sensori estesi
     private FileWriter csvWriter;
     private String fileName;
     private int dataCount = 0;
@@ -112,17 +112,18 @@ public class TorcsSCRManualDriver implements KeyListener {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
             String timestamp = sdf.format(new Date());
             
-            // File CSV semplificato - solo 8 valori essenziali
-            fileName = "torcs_simple_" + timestamp + ".csv";
+            // File CSV con sensori estesi - ora include track[0] e track[18]
+            fileName = "torcs_extended_" + timestamp + ".csv";
             csvWriter = new FileWriter(fileName);
             
-            // Header CSV semplificato con solo 8 colonne
-            String header = "speed,lateralSpeed,trackPosition,trackEdge_3,trackEdge_6,trackEdge_9,trackEdge_12,trackEdge_15,angleToTrackAxis,action_accelerate,action_brake,action_clutch,action_gear,action_steering,action_focus\n";
+            // Header CSV esteso con 7 sensori track (0,3,6,9,12,15,18)
+            String header = "speed,lateralSpeed,trackPosition,trackEdge_0,trackEdge_3,trackEdge_6,trackEdge_9,trackEdge_12,trackEdge_15,trackEdge_18,angleToTrackAxis,action_accelerate,action_brake,action_clutch,action_gear,action_steering,action_focus\n";
             
             csvWriter.write(header);
             csvWriter.flush();
             
             System.out.println("File CSV creato: " + fileName);
+            System.out.println("Sensori track inclusi: 0, 3, 6, 9, 12, 15, 18");
             System.out.println();
             
         } catch (IOException e) {
@@ -145,10 +146,10 @@ public class TorcsSCRManualDriver implements KeyListener {
                     // Aggiorna i valori di controllo prima di registrare
                     updateControlValues();
                     
-                    // Registra solo i valori semplificati ogni 50ms
+                    // Registra i valori estesi ogni 50ms
                     long currentTime = System.currentTimeMillis();
                     if (currentTime - lastSampleTime >= SAMPLE_INTERVAL_MS) {
-                        recordSimplifiedData(sensorData);
+                        recordExtendedData(sensorData);
                         lastSampleTime = currentTime;
                     }
                     
@@ -187,11 +188,11 @@ public class TorcsSCRManualDriver implements KeyListener {
         }
     }
     
-private void recordSimplifiedData(String sensorData) {
+private void recordExtendedData(String sensorData) {
     try {
         StringBuilder data = new StringBuilder();
         
-        // === 9 VALORI SENSORI ===
+        // === 11 VALORI SENSORI (invece di 9) ===
         
         // 1. Speed (da speedX)
         data.append(extractValue(sensorData, "speedX")).append(",");
@@ -202,54 +203,78 @@ private void recordSimplifiedData(String sensorData) {
         // 3. DistanzaLineaCentrale (da trackPos)
         data.append(extractValue(sensorData, "trackPos")).append(",");
         
-        // 4-8. Sensori traccia specifici
+        // 4-10. Sensori traccia estesi (7 sensori: 0,3,6,9,12,15,18)
         String[] trackSensors = extractTrackSensorsArray(sensorData);
-
-        // 4. SensoreSX1 (track[3])
+        
+        // 4. SensoreEstremoSX (track[0])
+        if (trackSensors.length > 0) {
+            data.append(trackSensors[0]).append(",");
+        } else {
+            data.append("200,");
+        }
+        
+        // 5. SensoreSX1 (track[3])
         if (trackSensors.length > 3) {
             data.append(trackSensors[3]).append(",");
+        } else {
+            data.append("200,");
         }
-
-        // 5. SensoreSX2 (track[6])
+        
+        // 6. SensoreSX2 (track[6])
         if (trackSensors.length > 6) {
             data.append(trackSensors[6]).append(",");
+        } else {
+            data.append("200,");
         }
-
-        // 6. SensoreCentrale (track[9])
+        
+        // 7. SensoreCentrale (track[9])
         if (trackSensors.length > 9) {
             data.append(trackSensors[9]).append(",");
+        } else {
+            data.append("200,");
         }
-
-        // 7. SensoreDX1 (track[12])
+        
+        // 8. SensoreDX1 (track[12])
         if (trackSensors.length > 12) {
             data.append(trackSensors[12]).append(",");
+        } else {
+            data.append("200,");
         }
-
-        // 8. SensoreDX2 (track[15])
+        
+        // 9. SensoreDX2 (track[15])
         if (trackSensors.length > 15) {
             data.append(trackSensors[15]).append(",");
+        } else {
+            data.append("200,");
         }
-
-        // 9. Angolo (da angle)
+        
+        // 10. SensoreEstremoDX (track[18])
+        if (trackSensors.length > 18) {
+            data.append(trackSensors[18]).append(",");
+        } else {
+            data.append("200,");
+        }
+        
+        // 11. Angolo (da angle)
         data.append(extractValue(sensorData, "angle")).append(",");
         
         // === 6 VALORI AZIONI ===
-        // 10. accelerate
+        // 12. accelerate
         data.append(String.format(Locale.US, "%.6f", currentAccel)).append(",");
         
-        // 11. brake
+        // 13. brake
         data.append(String.format(Locale.US, "%.6f", currentBrake)).append(",");
         
-        // 12. clutch
+        // 14. clutch
         data.append(String.format(Locale.US, "%.6f", currentClutch)).append(",");
         
-        // 13. gear
+        // 15. gear
         data.append(currentGear).append(",");
 
-        // 14. steering
+        // 16. steering
         data.append(String.format(Locale.US, "%.6f", currentSteering)).append(",");
         
-        // 15. focus (ULTIMO VALORE - SENZA VIRGOLA)
+        // 17. focus (ULTIMO VALORE - SENZA VIRGOLA)
         data.append(currentFocus).append("\n");
         
         csvWriter.write(data.toString());
@@ -267,7 +292,7 @@ private void recordSimplifiedData(String sensorData) {
         
         // Status update ogni 500 campioni
         if (dataCount % 500 == 0 && dataCount > 0) {
-            System.out.println("Dati raccolti: " + dataCount + " campioni (15 valori per riga) - Marcia: " + currentGear + 
+            System.out.println("Dati raccolti: " + dataCount + " campioni (17 valori per riga) - Marcia: " + currentGear + 
                              " - RPM: " + (int)currentRPM + " - Velocità: " + String.format("%.1f", Math.abs(currentSpeedX) * 3.6) + " km/h");
         }
         
