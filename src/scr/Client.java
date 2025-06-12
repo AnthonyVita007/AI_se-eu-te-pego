@@ -23,7 +23,7 @@ public class Client {
         prepareDatasets();
 
         // Istanziazione del Controller AI
-        KnnController driver = new KnnController(55);
+        KnnController driver = new KnnController(20);
         driver.setStage(stage);
         driver.setTrackName(trackName);
 
@@ -42,7 +42,7 @@ public class Client {
 
     private static void prepareDatasets() {
         //estrazione dei Features vectors e degli Action vectors dal file
-        String CsvFilePath = "dataset_definitivo.csv";
+        String CsvFilePath = "dataset_senza_outlier.csv";
         CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
         manager_file.extractVectors();
 

@@ -204,43 +204,16 @@ private void recordSimplifiedData(String sensorData) {
         
         // 4-8. Sensori traccia specifici
         String[] trackSensors = extractTrackSensorsArray(sensorData);
-        
-        // 4. SensoreSX1 (track[3])
-        if (trackSensors.length > 3) {
+
+
+            data.append(trackSensors[0]).append(",");
             data.append(trackSensors[3]).append(",");
-        } else {
-            data.append("200,");
-        }
-        
-        // 5. SensoreSX2 (track[6])
-        if (trackSensors.length > 6) {
             data.append(trackSensors[6]).append(",");
-        } else {
-            data.append("200,");
-        }
-        
-        // 6. SensoreCentrale (track[9])
-        if (trackSensors.length > 9) {
             data.append(trackSensors[9]).append(",");
-        } else {
-            data.append("200,");
-        }
-        
-        // 7. SensoreDX1 (track[12])
-        if (trackSensors.length > 12) {
             data.append(trackSensors[12]).append(",");
-        } else {
-            data.append("200,");
-        }
-        
-        // 8. SensoreDX2 (track[15])
-        if (trackSensors.length > 15) {
             data.append(trackSensors[15]).append(",");
-        } else {
-            data.append("200,");
-        }
-        
-        // 9. Angolo (da angle)
+            data.append(trackSensors[18]).append(",");
+
         data.append(extractValue(sensorData, "angle")).append(",");
         
         // === 6 VALORI AZIONI ===

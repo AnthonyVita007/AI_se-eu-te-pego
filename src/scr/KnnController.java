@@ -106,7 +106,7 @@ public class KnnController extends Controller{
     private double computeSteeringCorrectionFactor(double angleToTrackAxis) {
         final double MIN_CORRECTION = 0.1; // non azzera mai completamente la sterzata
         // Normalizza l'angolo in [0,1] rispetto ad un massimo atteso (es: 0.35 rad ~ 20°)
-        double maxAngle = 0.35; // adatta questo valore se necessario
+        double maxAngle = 0.3;
         double normalized = Math.min(1.0, Math.abs(angleToTrackAxis) / maxAngle);
         // Fattore: se angolo 0 -> MIN_CORRECTION, se angolo max -> 1
         return MIN_CORRECTION + (1.0 - MIN_CORRECTION) * normalized;
