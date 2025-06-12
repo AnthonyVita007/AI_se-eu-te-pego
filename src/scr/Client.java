@@ -52,10 +52,11 @@ public class Client {
         double[] array_valori_min = DatasetsManager.getFeatureMinValues();
         DatasetsManager.defineMaxMinForNormalization(array_valori_max, array_valori_min);
         DatasetsManager.normalizeFeaturesDataset();
+        DatasetsManager.printFeaturesDataset();
 
         //creazione del dataset delle actions
         DatasetsManager.createActionsDataset(manager_file.getActionVectors());
-        DatasetsManager.printActionsDataset();
+
     }
 
     private static void runEpisodes(KnnController driver, SocketHandler mySocket) {
@@ -88,7 +89,6 @@ public class Client {
                     Action action = new Action();
                     if (currStep < maxSteps || maxSteps == 0){
                         action = driver.control(new MessageBasedSensorModel(inMsg));
-                        System.out.println(action.toString());
                     }
                     else
                         action.restartRace = true;

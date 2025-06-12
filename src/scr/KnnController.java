@@ -123,17 +123,18 @@ public class KnnController extends Controller{
         torcsFeatureVector[2] = sensors.getTrackPosition();
 
         double[] track = sensors.getTrackEdgeSensors();
-        torcsFeatureVector[3] = track[3];
-        torcsFeatureVector[4] = track[6];
-        torcsFeatureVector[5] = track[9];
-        torcsFeatureVector[6] = track[12];
-        torcsFeatureVector[7] = track[15];
+        torcsFeatureVector[3] = track[0];
+        torcsFeatureVector[4] = track[3];
+        torcsFeatureVector[5] = track[6];
+        torcsFeatureVector[6] = track[9];
+        torcsFeatureVector[7] = track[12];
+        torcsFeatureVector[8] = track[15];
+        torcsFeatureVector[9] = track[18];
 
-        torcsFeatureVector[8] = sensors.getAngleToTrackAxis();
+        torcsFeatureVector[10] = sensors.getAngleToTrackAxis();
 
         // NORMALIZZAZIONE DEL VETTORE DELLE FEATURE PROVENIENTE DA TORCS
         torcsFeatureVector = DatasetsManager.normalizeFeatureVector(torcsFeatureVector);
-        Utilities.printVettore(torcsFeatureVector);
 
         // TROVIAMO I K NEAREST NEIGHBORS (usando l'attributo di classe k)
         List<NeighborInfo> neighbors = this.findKNearestNeighborsWithDistances(torcsFeatureVector, this.k);
@@ -146,15 +147,24 @@ public class KnnController extends Controller{
         action.accelerate = controlli[0];
         action.brake = controlli[1];
         action.clutch = controlli[2];
-        action.gear = (int) Math.round(controlli[3]);
+        if(torcsFeatureVector[0] >= 0 && torcsFeatureVector[0] <= 40) {
+            action.gear = 1;
+        }else if(torcsFeatureVector[0] > 40 && torcsFeatureVector[0] <= 70) {
+            action.gear = 2;
+        }else if(torcsFeatureVector[0] > 70 && torcsFeatureVector[0] <= 100) {
+            action.gear = 3;
+        }else if(torcsFeatureVector[0] > 100 && torcsFeatureVector[0] <= 140) {
+            action.gear = 4;
+        }else if(torcsFeatureVector[0] > 140 && torcsFeatureVector[0] <= 180) {
+            action.gear = 5;
+        }
+        else if(torcsFeatureVector[0] > 180) {
+            action.gear = 6;
+        }
 
         //gestione sterzata
         // --- Smoothing e limitazione della sterzata ---
         double rawSteering = controlli[4];
-
-        System.out.println("Previous steering: " + previousSteering);
-        System.out.println("Raw steering: " + rawSteering);
-
 
         // Applica smoothing esponenziale
         double smoothedSteering = steeringSmoothingAlpha * rawSteering + (1 - steeringSmoothingAlpha) * previousSteering;
@@ -168,12 +178,16 @@ public class KnnController extends Controller{
         }
         action.steering = smoothedSteering;
 
-        System.out.println("Smoothed steering: " + smoothedSteering);
+        //STAMPE DI DEBUG
+        System.out.println("VETTORE TORCS");
+        Utilities.printVettore(torcsFeatureVector);
+
         // Aggiorna la memoria della sterzata
         previousSteering = smoothedSteering;
 
         action.focus = (int) controlli[5];
         action.limitValues();
+
         return action;
     }
 
