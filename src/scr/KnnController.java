@@ -14,7 +14,7 @@ public class KnnController extends Controller{
     // Parametri per gestione azioni
     private double steeringSmoothingAlpha = 0.3; // Più vicino a 1 = più reattivo, più vicino a 0 = più dolce
     private double previousSteering = 0.0; // Memorizza la sterzata precedente
-    private double maxSteeringDelta = 0.05; // Variazione massima consentita per step (prova valori 0.03-0.1)
+    private double maxSteeringDelta = 0.07; // Variazione massima consentita per step (prova valori 0.03-0.1)
 
     final int[] gearUp = {7500, 8000, 8500, 8900, 9400, 0};
     final int[] gearDown = {0, 2500, 3000, 3500, 4000, 4500};
@@ -166,11 +166,20 @@ public class KnnController extends Controller{
 
         // CREA UN OGGETTO ACTION DA RITORNARE A TORCS
         Action action = new Action();
-        action.accelerate = controlli[0];
+
         action.brake = controlli[1];
+
+        //GESTIONE ACCELERAZIONE
+        if(torcsFeatureVector[5] < 0.40 && torcsFeatureVector[0] > 0.5)
+            action.accelerate = 0.4;
+        else
+            action.accelerate = controlli[0];
         action.clutch = controlli[2];
+
+        //GESTIONE GEAR
         //action.gear = toIntExact(round(controlli[3]));
         action.gear = getGear(sensors);
+
         //GESTIONE STERZATA
         // --- Smoothing e limitazione della sterzata ---
         double rawSteering = controlli[4];
