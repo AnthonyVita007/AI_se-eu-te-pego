@@ -23,7 +23,7 @@ public class Client {
         prepareDatasets();
 
         // Istanziazione del Controller AI
-        KnnController driver = new KnnController(20);
+        KnnController driver = new KnnController(14);
         driver.setStage(stage);
         driver.setTrackName(trackName);
 
@@ -42,7 +42,7 @@ public class Client {
 
     private static void prepareDatasets() {
         //estrazione dei Features vectors e degli Action vectors dal file
-        String CsvFilePath = "dataset_senza_outlier.csv";
+        String CsvFilePath = "15_giri_clean.csv";
         CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
         manager_file.extractVectors();
 
@@ -56,7 +56,6 @@ public class Client {
 
         //creazione del dataset delle actions
         DatasetsManager.createActionsDataset(manager_file.getActionVectors());
-
     }
 
     private static void runEpisodes(KnnController driver, SocketHandler mySocket) {
@@ -89,6 +88,7 @@ public class Client {
                     Action action = new Action();
                     if (currStep < maxSteps || maxSteps == 0){
                         action = driver.control(new MessageBasedSensorModel(inMsg));
+                        System.out.println(action.toString());
                     }
                     else
                         action.restartRace = true;

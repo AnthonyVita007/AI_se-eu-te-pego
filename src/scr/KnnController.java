@@ -14,7 +14,7 @@ public class KnnController extends Controller{
     // Parametri per smoothing e limitazione della sterzata
     private double steeringSmoothingAlpha = 0.3; // Più vicino a 1 = più reattivo, più vicino a 0 = più dolce
     private double previousSteering = 0.0; // Memorizza la sterzata precedente
-    private double maxSteeringDelta = 0.003; // Variazione massima consentita per step (prova valori 0.03-0.1)
+    private double maxSteeringDelta = 0.055; // Variazione massima consentita per step (prova valori 0.03-0.1)
 
     // Classe interna per rappresentare un vicino con indice e distanza
     private static class NeighborInfo {
@@ -92,9 +92,9 @@ public class KnnController extends Controller{
         for (int j = 0; j < actionLen; j++) {
             weightedSum[j] /= weightSum;
         }
-        // Applica la correzione solo alla sterzata (indice 4)
-        weightedSum[4] *= computeSteeringCorrectionFactor(angleToTrackAxis);
 
+        // CORREZZIONE STERZATA (indice 4)
+        weightedSum[4] *= computeSteeringCorrectionFactor(angleToTrackAxis);
         return weightedSum;
     }
 
@@ -104,9 +104,9 @@ public class KnnController extends Controller{
      * Puoi tarare MIN_CORRECTION e la funzione secondo le tue esigenze.
      */
     private double computeSteeringCorrectionFactor(double angleToTrackAxis) {
-        final double MIN_CORRECTION = 0.1; // non azzera mai completamente la sterzata
-        // Normalizza l'angolo in [0,1] rispetto ad un massimo atteso (es: 0.35 rad ~ 20°)
-        double maxAngle = 0.3;
+        final double MIN_CORRECTION = 0.15; // non azzera mai completamente la sterzata
+        // diminuendo il max angle è più sensibile
+        double maxAngle = 0.18;
         double normalized = Math.min(1.0, Math.abs(angleToTrackAxis) / maxAngle);
         // Fattore: se angolo 0 -> MIN_CORRECTION, se angolo max -> 1
         return MIN_CORRECTION + (1.0 - MIN_CORRECTION) * normalized;
@@ -123,15 +123,12 @@ public class KnnController extends Controller{
         torcsFeatureVector[2] = sensors.getTrackPosition();
 
         double[] track = sensors.getTrackEdgeSensors();
-        torcsFeatureVector[3] = track[0];
-        torcsFeatureVector[4] = track[3];
-        torcsFeatureVector[5] = track[6];
-        torcsFeatureVector[6] = track[9];
-        torcsFeatureVector[7] = track[12];
-        torcsFeatureVector[8] = track[15];
-        torcsFeatureVector[9] = track[18];
-
-        torcsFeatureVector[10] = sensors.getAngleToTrackAxis();
+        torcsFeatureVector[3] = track[3];
+        torcsFeatureVector[4] = track[6];
+        torcsFeatureVector[5] = track[9];
+        torcsFeatureVector[6] = track[12];
+        torcsFeatureVector[7] = track[15];
+        torcsFeatureVector[8] = sensors.getAngleToTrackAxis();
 
         // NORMALIZZAZIONE DEL VETTORE DELLE FEATURE PROVENIENTE DA TORCS
         torcsFeatureVector = DatasetsManager.normalizeFeatureVector(torcsFeatureVector);
@@ -147,21 +144,7 @@ public class KnnController extends Controller{
         action.accelerate = controlli[0];
         action.brake = controlli[1];
         action.clutch = controlli[2];
-        if(torcsFeatureVector[0] >= 0 && torcsFeatureVector[0] <= 40) {
-            action.gear = 1;
-        }else if(torcsFeatureVector[0] > 40 && torcsFeatureVector[0] <= 70) {
-            action.gear = 2;
-        }else if(torcsFeatureVector[0] > 70 && torcsFeatureVector[0] <= 100) {
-            action.gear = 3;
-        }else if(torcsFeatureVector[0] > 100 && torcsFeatureVector[0] <= 140) {
-            action.gear = 4;
-        }else if(torcsFeatureVector[0] > 140 && torcsFeatureVector[0] <= 180) {
-            action.gear = 5;
-        }
-        else if(torcsFeatureVector[0] > 180) {
-            action.gear = 6;
-        }
-
+        action.gear = toIntExact(round(controlli[3]));
         //gestione sterzata
         // --- Smoothing e limitazione della sterzata ---
         double rawSteering = controlli[4];
