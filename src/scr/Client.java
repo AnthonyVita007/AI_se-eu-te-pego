@@ -42,7 +42,7 @@ public class Client {
 
     private static void prepareDatasets() {
         //estrazione dei Features vectors e degli Action vectors dal file
-        String CsvFilePath = "15_giri_clean.csv";
+        String CsvFilePath = "ciao.csv";
         CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
         manager_file.extractVectors();
 

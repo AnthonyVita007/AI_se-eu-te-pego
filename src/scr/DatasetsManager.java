@@ -25,7 +25,7 @@ public class DatasetsManager {
 
     public static void createActionsDataset(ArrayList<ArrayList<Double>> actionVectors){
         int numRows = actionVectors.size();
-        int numCols = actionVectors.get(0).size(); // assumiamo che tutti i vettori abbiano la stessa dimensione
+        int numCols = actionVectors.get(0).size();
         actionsDataset = new double[numRows][numCols];
         for (int i = 0; i < numRows; i++) {
             ArrayList<Double> currentVector = actionVectors.get(i);

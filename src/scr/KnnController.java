@@ -142,18 +142,20 @@ public class KnnController extends Controller{
     @Override
     public Action control(SensorModel sensors) {
         // COSTRUZIONE DEL VETTORE DELLE FEATURE PROVENIENTE DA TORCS
-        double[] torcsFeatureVector = new double[9];
+        double[] torcsFeatureVector = new double[23];
+        // Primi 3 valori base
         torcsFeatureVector[0] = sensors.getSpeed();
         torcsFeatureVector[1] = sensors.getLateralSpeed();
         torcsFeatureVector[2] = sensors.getTrackPosition();
 
+        // Inserimento di tutti i 19 sensori track
         double[] track = sensors.getTrackEdgeSensors();
-        torcsFeatureVector[3] = track[3];
-        torcsFeatureVector[4] = track[6];
-        torcsFeatureVector[5] = track[9];
-        torcsFeatureVector[6] = track[12];
-        torcsFeatureVector[7] = track[15];
-        torcsFeatureVector[8] = sensors.getAngleToTrackAxis();
+        for (int i = 0; i < 19; i++) {
+            torcsFeatureVector[i + 3] = track[i];  // Riempie le posizioni da 3 a 21
+        }
+
+        // Angolo rispetto all'asse della pista (ultima feature)
+        torcsFeatureVector[20] = sensors.getAngleToTrackAxis();
 
         // NORMALIZZAZIONE DEL VETTORE DELLE FEATURE PROVENIENTE DA TORCS
         torcsFeatureVector = DatasetsManager.normalizeFeatureVector(torcsFeatureVector);
@@ -170,10 +172,8 @@ public class KnnController extends Controller{
         action.brake = controlli[1];
 
         //GESTIONE ACCELERAZIONE
-        if(torcsFeatureVector[5] < 0.40 && torcsFeatureVector[0] > 0.5)
-            action.accelerate = 0.4;
-        else
-            action.accelerate = controlli[0];
+        action.accelerate = controlli[0];
+
         action.clutch = controlli[2];
 
         //GESTIONE GEAR
