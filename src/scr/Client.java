@@ -20,10 +20,10 @@ public class Client {
         parseParameters(args);
 
         // Caricamento e normalizzazione dataset
-        prepareDatasets();
+        prepareDatasets("20_giri_dataset_modificato.csv");
 
         // Istanziazione del Controller AI
-        KnnController driver = new KnnController(12);
+        KnnController driver = new KnnController(8);
         driver.setStage(stage);
         driver.setTrackName(trackName);
 
@@ -40,9 +40,8 @@ public class Client {
         System.out.println("Bye, bye!");
     }
 
-    private static void prepareDatasets() {
+    private static void prepareDatasets(String CsvFilePath) {
         //estrazione dei Features vectors e degli Action vectors dal file
-        String CsvFilePath = "ciao.csv";
         CsvLogManager manager_file = new CsvLogManager(CsvFilePath);
         manager_file.extractVectors();
 

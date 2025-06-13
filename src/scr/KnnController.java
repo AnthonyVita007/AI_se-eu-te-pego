@@ -14,9 +14,9 @@ public class KnnController extends Controller{
     // Parametri per gestione azioni
     private double steeringSmoothingAlpha = 0.3; // Più vicino a 1 = più reattivo, più vicino a 0 = più dolce
     private double previousSteering = 0.0; // Memorizza la sterzata precedente
-    private double maxSteeringDelta = 0.07; // Variazione massima consentita per step (prova valori 0.03-0.1)
+    private double maxSteeringDelta = 0.05; // Variazione massima consentita per step (prova valori 0.03-0.1)
 
-    final int[] gearUp = {7500, 8000, 8500, 8900, 9400, 0};
+    final int[] gearUp = {7000, 7500, 8000, 8500, 9000, 0};
     final int[] gearDown = {0, 2500, 3000, 3500, 4000, 4500};
 
     // Classe interna per rappresentare un vicino con indice e distanza
@@ -75,6 +75,7 @@ public class KnnController extends Controller{
         double epsilon = 1e-8; // per evitare divisione per zero
 
         // Se esiste un vicino con distanza quasi zero, restituisci direttamente la sua azione (evita outlier)
+        /*
         for (NeighborInfo neighbor : neighbors) {
             if (neighbor.distance < 1e-6) {
                 double[] action = actionsDataset[neighbor.index].clone();
@@ -83,6 +84,7 @@ public class KnnController extends Controller{
                 return action;
             }
         }
+        */
 
         // Calcola la media pesata tra i vicini
         for (NeighborInfo neighbor : neighbors) {
@@ -96,7 +98,7 @@ public class KnnController extends Controller{
             weightedSum[j] /= weightSum;
         }
 
-        // CORREZZIONE STERZATA (indice 4)
+        // CORREZIONE STERZATA (indice 4)
         weightedSum[4] *= computeSteeringCorrectionFactor(angleToTrackAxis);
         return weightedSum;
     }
@@ -109,7 +111,7 @@ public class KnnController extends Controller{
     private double computeSteeringCorrectionFactor(double angleToTrackAxis) {
         final double MIN_CORRECTION = 0.1; // non azzera mai completamente la sterzata
         // diminuendo il max angle è più sensibile
-        double maxAngle = 0.18;
+        double maxAngle = 0.20;
         double normalized = Math.min(1.0, Math.abs(angleToTrackAxis) / maxAngle);
         // Fattore: se angolo 0 -> MIN_CORRECTION, se angolo max -> 1
         return MIN_CORRECTION + (1.0 - MIN_CORRECTION) * normalized;
