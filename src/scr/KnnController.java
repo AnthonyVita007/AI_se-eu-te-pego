@@ -12,9 +12,9 @@ public class KnnController extends Controller{
     private int k; // valore di default
 
     // Parametri per gestione azioni
-    private double steeringSmoothingAlpha = 0.3; // Più vicino a 1 = più reattivo, più vicino a 0 = più dolce
+    private double steeringSmoothingAlpha = 0.2; // Più vicino a 1 = più reattivo, più vicino a 0 = più dolce
     private double previousSteering = 0.0; // Memorizza la sterzata precedente
-    private double maxSteeringDelta = 0.05; // Variazione massima consentita per step (prova valori 0.03-0.1)
+    private double maxSteeringDelta = 0.065; // Variazione massima consentita per step (prova valori 0.03-0.1)
 
     final int[] gearUp = {7000, 7500, 8000, 8500, 9000, 0};
     final int[] gearDown = {0, 2500, 3000, 3500, 4000, 4500};

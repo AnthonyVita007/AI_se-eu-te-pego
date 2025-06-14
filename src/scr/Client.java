@@ -21,7 +21,6 @@ public class Client {
 
         // Caricamento e normalizzazione dataset
         prepareDatasets("20_giri_dataset_modificato.csv");
-
         // Istanziazione del Controller AI
         KnnController driver = new KnnController(8);
         driver.setStage(stage);
