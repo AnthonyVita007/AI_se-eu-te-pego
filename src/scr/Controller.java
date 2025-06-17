@@ -48,7 +48,7 @@ public abstract class Controller {
 
     public abstract Action control(SensorModel sensors);
 
-    public abstract void reset(); // called at the beginning of each new trial
+    public abstract void reset(); 
 
     public abstract void shutdown();
 

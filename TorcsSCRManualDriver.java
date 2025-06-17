@@ -399,7 +399,7 @@ public class TorcsSCRManualDriver implements KeyListener {
                 }
             }
         } catch (Exception e) {
-            // Fallback
+            // cattura eccezione
         }
         return new String[0];
     }
@@ -458,11 +458,6 @@ public class TorcsSCRManualDriver implements KeyListener {
                 brakePressed = false;
                 break;
         }
-    }
-    
-    @Override
-    public void keyTyped(KeyEvent e) {
-        // Non utilizzato
     }
     
     private void resetCar() {

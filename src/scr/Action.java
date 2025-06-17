@@ -8,9 +8,8 @@ public class Action {
     public int gear = 0; // -1..6
     public double steering = 0; // -1..1
     public boolean restartRace = false;
-    public int focus = 360;// ML Desired focus angle in degrees [-90; 90], set to 360 if no focus reading
-    // is desired!
-
+    public int focus = 360;
+    
     public String toString() {
         limitValues();
         return "(accel " + accelerate + ") " + "(brake " + brake + ") " + "(clutch " + clutch + ") " + "(gear " + gear

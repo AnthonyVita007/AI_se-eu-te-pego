@@ -60,31 +60,12 @@ public class KnnController extends Controller{
     }
 
     // Calcola la media pesata delle azioni dei vicini (con pesi inversamente proporzionali alla distanza)
-    /**
-     * Calcola la media pesata delle azioni dei k vicini, applicando una correzione sulla sterzata
-     * in base all'angolo rispetto all'asse della strada.
-     * @param neighbors Lista dei k vicini con distanza e indice
-     * @param angleToTrackAxis Angolo rispetto all'asse della strada (non normalizzato, tipicamente in radianti)
-     * @return vettore delle azioni mediate e corrette
-     */
     private double[] weightedMeanActionOfKNeighbors(List<NeighborInfo> neighbors, double angleToTrackAxis) {
         if (actionsDataset == null || neighbors.isEmpty()) return null;
         int actionLen = actionsDataset[0].length;
         double[] weightedSum = new double[actionLen];
         double weightSum = 0.0;
         double epsilon = 1e-8; // per evitare divisione per zero
-
-        // Se esiste un vicino con distanza quasi zero, restituisci direttamente la sua azione (evita outlier)
-        /*
-        for (NeighborInfo neighbor : neighbors) {
-            if (neighbor.distance < 1e-6) {
-                double[] action = actionsDataset[neighbor.index].clone();
-                // Correggi la sterzata se necessario
-                action[4] *= computeSteeringCorrectionFactor(angleToTrackAxis);
-                return action;
-            }
-        }
-        */
 
         // Calcola la media pesata tra i vicini
         for (NeighborInfo neighbor : neighbors) {
@@ -103,11 +84,8 @@ public class KnnController extends Controller{
         return weightedSum;
     }
 
-    /**
-     * Calcola un fattore di correzione per la sterzata in base all'angolo rispetto all'asse della pista.
-     * Più l'auto è allineata (angolo vicino a 0), più la sterzata viene smorzata.
-     * Puoi tarare MIN_CORRECTION e la funzione secondo le tue esigenze.
-     */
+    /* Calcola un fattore di correzione per la sterzata in base all'angolo rispetto all'asse della pista.
+     Più l'auto è allineata (angolo vicino a 0), più la sterzata viene smorzata.*/
     private double computeSteeringCorrectionFactor(double angleToTrackAxis) {
         final double MIN_CORRECTION = 0.1; // non azzera mai completamente la sterzata
         // diminuendo il max angle è più sensibile
@@ -121,19 +99,19 @@ public class KnnController extends Controller{
         int gear = sensors.getGear();
         double rpm = sensors.getRPM();
 
-        // if gear is 0 (N) or -1 (R) just return 1
+        // se la marcia è 0 (N) o -1 (R) ritorna 1
         if (gear < 1) {
             return 1;
         }
-        // check if the RPM value of car is greater than the one suggested
-        // to shift up the gear from the current one
+        // controlla se gli rpm della macchina sono maggiori di quelli suggeriti
+        // per far avanzare di marcia
         if (gear < 6 && rpm >= gearUp[gear - 1]) {
             return gear + 1;
-        } else // check if the RPM value of car is lower than the one suggested
-            // to shift down the gear from the current one
+        } else // controlla se gli rpm della macchina sono minori di quelli suggeriti
+            // per far scendere di marcia
             if (gear > 1 && rpm <= gearDown[gear - 1]) {
                 return gear - 1;
-            } else // otherwhise keep current gear
+            } else // altrimenti mantieni quella attuale
             {
                 return gear;
             }
@@ -179,7 +157,6 @@ public class KnnController extends Controller{
         action.clutch = controlli[2];
 
         //GESTIONE GEAR
-        //action.gear = toIntExact(round(controlli[3]));
         action.gear = getGear(sensors);
 
         //GESTIONE STERZATA
@@ -214,7 +191,7 @@ public class KnnController extends Controller{
     @Override
     public void reset() {
         System.out.println("La gara sta per ricominciare");
-        previousSteering = 0.0; // Importante! Così non hai "memorie" sbagliate tra una gara e l'altra
+        previousSteering = 0.0; // per evitare che i valori della gara passata influenzino quelli della gara attuale
     }
 
     @Override

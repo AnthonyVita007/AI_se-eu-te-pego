@@ -20,7 +20,7 @@ public class Client {
         parseParameters(args);
 
         // Caricamento e normalizzazione dataset
-        prepareDatasets("20_giri_dataset_modificato.csv");
+        prepareDatasets("DATASET_DEFINITIVO.csv");
 
         // Istanziazione del Controller AI
         KnnController driver = new KnnController(7);
